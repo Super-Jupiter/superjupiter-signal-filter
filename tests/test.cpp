@@ -1,4 +1,5 @@
 #include <SuperJupiterSignalFilter.h>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <new>
