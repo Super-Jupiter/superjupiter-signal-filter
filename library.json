@@ -1,6 +1,6 @@
 {
   "name": "SuperJupiterSignalFilter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Elapsed-time exponential smoothing with explicit gap and input handling. Portable C++11 by SuperJupiter. Hardware validation pending.",
   "keywords": [
     "sensor",

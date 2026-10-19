@@ -2,19 +2,22 @@
 // Copyright (c) 2026 SuperJupiter
 #ifndef SUPERJUPITER_SIGNAL_FILTER_H
 #define SUPERJUPITER_SIGNAL_FILTER_H
-#if defined(__FAST_MATH__) || (defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__ > 0)
+#if defined(__FAST_MATH__) ||                                                  \
+    (defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__ > 0)
 #error "SuperJupiter requires IEEE non-finite checks; disable fast-math"
 #endif
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
-#define SUPERJUPITER_SIGNAL_FILTER_VERSION "0.1.0"
+#define SUPERJUPITER_SIGNAL_FILTER_VERSION "0.1.1"
 namespace superjupiter {
 namespace signal_filter {
 
 namespace detail {
-inline bool finite(double value) { return value == value && value >= -DBL_MAX && value <= DBL_MAX; }
+inline bool finite(double value) {
+  return value == value && value >= -DBL_MAX && value <= DBL_MAX;
+}
 inline double oneMinusExpNegative(double ratio) {
   // Stable at small elapsed/tau without requiring AVR's unavailable expm1.
   if (ratio < 0.01) {
@@ -26,6 +29,14 @@ inline double oneMinusExpNegative(double ratio) {
     return total;
   }
   return 1 - ::exp(-ratio);
+}
+inline double blend(double a, double b, double fraction) {
+  if (fraction == 0 || a == b)
+    return a;
+  if (fraction == 1)
+    return b;
+  return (a < 0) != (b < 0) ? (1 - fraction) * a + fraction * b
+                            : a + fraction * (b - a);
 }
 } // namespace detail
 
@@ -62,8 +73,8 @@ public:
     time_ = 0;
   }
   Result push(double raw, uint32_t atMs) {
-    if (!detail::finite(config_.tauMs) || config_.tauMs <= 0 || config_.maxGapMs == 0 ||
-        config_.maxGapMs >= 0x80000000UL)
+    if (!detail::finite(config_.tauMs) || config_.tauMs <= 0 ||
+        config_.maxGapMs == 0 || config_.maxGapMs >= 0x80000000UL)
       return Result{Status::InvalidConfig, value_};
     if (!detail::finite(raw))
       return Result{Status::InvalidInput, value_};
@@ -81,8 +92,9 @@ public:
       time_ = atMs;
       return Result{Status::GapReset, value_};
     }
-    const double alpha = detail::oneMinusExpNegative(static_cast<double>(dt) / config_.tauMs);
-    const double next = (1 - alpha) * value_ + alpha * raw;
+    const double alpha =
+        detail::oneMinusExpNegative(static_cast<double>(dt) / config_.tauMs);
+    const double next = detail::blend(value_, raw, alpha);
     if (!detail::finite(next))
       return Result{Status::NumericError, value_};
     value_ = next;

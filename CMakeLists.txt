@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(SuperJupiterSignalFilter VERSION 0.1.0 LANGUAGES CXX)
+project(SuperJupiterSignalFilter VERSION 0.1.1 LANGUAGES CXX)
 
 set(_superjupiter_signal_filter_top_level OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -19,6 +19,9 @@ target_compile_features(SuperJupiterSignalFilter INTERFACE cxx_std_11)
 
 if(SUPERJUPITER_SIGNAL_FILTER_BUILD_TESTS)
   enable_testing()
+  add_executable(superjupiter-signal-filter-review tests/review_regressions.cpp)
+  target_link_libraries(superjupiter-signal-filter-review PRIVATE SuperJupiter::SignalFilter)
+  add_test(NAME superjupiter-signal-filter-review COMMAND superjupiter-signal-filter-review)
   add_executable(superjupiter-signal-filter-tests tests/test.cpp)
   target_link_libraries(superjupiter-signal-filter-tests PRIVATE SuperJupiter::SignalFilter)
   add_test(NAME superjupiter-signal-filter-tests COMMAND superjupiter-signal-filter-tests)
